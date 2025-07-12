@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jellyfin-service
+spec:
+  selector:
+    app: jellyfin
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8097
+      targetPort: 8096
