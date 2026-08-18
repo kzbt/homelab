@@ -1,0 +1,5 @@
+name: homelab
+
+include:
+  - apps/jellyfin/docker-compose.yml
+  - apps/stremio/docker-compose.yml

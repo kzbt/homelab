@@ -15,6 +15,7 @@ Two Docker containers (plain Docker Compose — no Kubernetes):
 ## Layout
 
 ```
+docker-compose.yml  # root stack — includes both apps below; `docker compose up -d` here runs everything
 apps/        # docker-compose stacks (the source of truth for the live containers)
   jellyfin/
   stremio/
@@ -44,10 +45,15 @@ sudo host/bootstrap.sh                       # users, groups, dirs
 #    + restore /etc/jellyfin, /var/lib/jellyfin from backup
 #    + set up rclone (host/rclone/README.md) + enable the mount unit
 
-# 2. apps
-docker compose -f apps/stremio/docker-compose.yml  up -d
-docker compose -f apps/jellyfin/docker-compose.yml up -d
+# 2. apps (root compose file includes both apps/ stacks)
+docker compose up -d
 ```
+
+Both containers (`jellyfin`, `stremio_server`) run under the single `homelab`
+Compose project defined by the root `docker-compose.yml`. Each app's own
+`apps/*/docker-compose.yml` can still be run standalone with `-f` if needed,
+but it will end up under a differently-named project — prefer the root file
+for day-to-day use.
 
 ## Notes
 
