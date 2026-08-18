@@ -1,0 +1,18 @@
+[Unit]
+Description=Rclone Mount (AllDebrid magnets -> /media/alldebrid)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Read-only FUSE mount of the AllDebrid "magnets" WebDAV remote. Credentials
+# live in the running user's ~/.config/rclone/rclone.conf (NOT in this repo).
+# uid/gid 1000:1002 = kiran:media so the tree is readable by the media group.
+ExecStart=rclone mount alldebrid:magnets /media/alldebrid --dir-cache-time 10s --multi-thread-streams=0 --cutoff-mode cautious --vfs-cache-mode minimal --network-mode --buffer-size 0 --read-only --uid 1000 --gid 1002 --dir-perms 0775 --file-perms 0664 --allow-other
+ExecStop=/bin/fusermount -u /media/alldebrid
+User=kiran
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

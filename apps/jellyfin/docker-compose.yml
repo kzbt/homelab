@@ -1,0 +1,42 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.11.1
+    container_name: jellyfin
+    # Match the native jellyfin user/group (uid=986 gid=984)
+    user: "986:984"
+    group_add:
+      - "105"   # render — GPU hardware acceleration
+      - "1002"  # media
+    network_mode: host
+    restart: unless-stopped
+    command: --webdir=/jellyfin/jellyfin-web
+
+    volumes:
+      # Existing native data/config/cache directories — mounted at the same
+      # paths so no config changes are needed inside the container
+      - /var/lib/jellyfin:/var/lib/jellyfin
+      - /etc/jellyfin:/etc/jellyfin
+      - /var/cache/jellyfin:/var/cache/jellyfin
+      - /var/log/jellyfin:/var/log/jellyfin
+
+      # Media libraries — slave propagation so NFS/FUSE mounts made on the
+      # host after container start remain visible inside the container
+      - type: bind
+        source: /media/nfs
+        target: /media/nfs
+        bind:
+          propagation: slave
+      - type: bind
+        source: /media/alldebrid
+        target: /media/alldebrid
+        bind:
+          propagation: slave
+
+    environment:
+      JELLYFIN_DATA_DIR: /var/lib/jellyfin
+      JELLYFIN_CONFIG_DIR: /etc/jellyfin
+      JELLYFIN_CACHE_DIR: /var/cache/jellyfin
+      JELLYFIN_LOG_DIR: /var/log/jellyfin
+
+    devices:
+      - /dev/dri:/dev/dri

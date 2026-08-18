@@ -1,0 +1,38 @@
+services:
+  stremio_server:
+    # Reconstructed from `docker inspect` of the live container — the original
+    # compose file (~/.source/homelab/docker-compose.yaml) was deleted, so this
+    # reproduces the running container exactly.
+    #
+    # Image tag matches the live container. Server reports version 4.20.14
+    # (image built 2025-11-25). For strict reproducibility, pin by digest:
+    #   image: stremio/server@sha256:31f37d46193f05e8cadbf1899ea49c453ec8ef2a3882ff90096509e1f6b596f7
+    image: stremio/server:latest
+    container_name: stremio_server
+    restart: unless-stopped
+    # No entrypoint/command override: the image runs `node server.js` (the live
+    # container shows `node server.js bash` — the trailing `bash` is the image's
+    # default CMD arg and is ignored by stremio-server).
+    environment:
+      FFMPEG_BIN: /bin/ffmpeg
+      FFPROBE_BIN: /bin/ffprobe
+      CASTING_DISABLED: "1"
+    ports:
+      - "11470:11470"   # streaming / API
+      - "12470:12470"   # streaming / API
+    volumes:
+      # Stremio-server data dir (settings, cache, local files). server-settings.json
+      # committed in this folder is the canonical copy — place it here on deploy.
+      - /home/kiran/stremio:/root/.stremio-server
+      # The container uses the HOST ffmpeg/ffprobe (Fedora rpm) via these binds
+      # + the FFMPEG_BIN/FFPROBE_BIN env vars above. Host must have ffmpeg installed.
+      - /bin/ffmpeg:/bin/ffmpeg:ro
+      - /bin/ffprobe:/bin/ffprobe:ro
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    # Named network matching the original stack's intent. Explicit `name` keeps
+    # it stable regardless of the compose project name.
+    name: homelab

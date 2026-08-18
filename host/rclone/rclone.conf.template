@@ -1,0 +1,14 @@
+# rclone remote definition for AllDebrid.
+#
+# This is a TEMPLATE only — the real ~/.config/rclone/rclone.conf contains
+# credentials and is deliberately NOT committed (see .gitignore). Use it as a
+# reference for the expected shape; the recommended way to (re)create it is to
+# run `rclone config` interactively, which generates the file correctly and
+# obfuscates the password.
+
+[alldebrid]
+type = <backend type, e.g. webdav>
+url = <AllDebrid WebDAV endpoint URL>
+vendor = <vendor, e.g. other>
+user = <AllDebrid username>
+pass = <rclone-obfuscated password — generate via `rclone config` or `rclone obscure`>

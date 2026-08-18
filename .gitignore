@@ -1,0 +1,18 @@
+# Secrets / runtime data — never commit
+rclone.conf
+**/rclone.conf
+.env
+.env.*
+!.env.example
+
+# Stremio runtime cache (large, owned by root, transient)
+stremio-cache/
+**/stremio-cache/
+
+# Jellyfin runtime data (restored from backup on rebuild)
+**/jellyfin/data/
+
+# Generic
+*.log
+*.swp
+.DS_Store
