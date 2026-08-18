@@ -4,3 +4,4 @@ include:
   - apps/jellyfin/docker-compose.yml
   - apps/stremio/docker-compose.yml
   - apps/blocky/docker-compose.yml
+  - apps/monitoring/docker-compose.yml

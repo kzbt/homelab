@@ -1,0 +1,48 @@
+services:
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.12.1
+    container_name: node-exporter
+    restart: unless-stopped
+    # Host PID/network + a read-only bind of the whole host filesystem is the
+    # officially documented way to run node_exporter in Docker and still get
+    # accurate host-level metrics (network interfaces, mounts, etc. would
+    # otherwise reflect the container's own namespace, not the host's).
+    network_mode: host
+    pid: host
+    volumes:
+      - /:/host:ro,rslave
+    command:
+      - "--path.rootfs=/host"
+
+  prometheus:
+    image: prom/prometheus:v3.14.0
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    # node-exporter uses network_mode: host, so it has no container name to
+    # scrape by; reach it via the host's gateway IP instead.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      # Host port 9091, not 9090 - Cockpit (Fedora's web console) already
+      # holds 9090 on this host.
+      - "9091:9090"
+
+  grafana:
+    image: grafana/grafana:13.2.0
+    container_name: grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      - "3000:3000"
+
+volumes:
+  prometheus-data:
+  grafana-data:
