@@ -10,7 +10,7 @@ Reference system at time of capture: **Fedora Linux 41 (Server Edition)**.
 
 | Path | Purpose |
 |---|---|
-| `bootstrap.sh` | Create Jellyfin user/group (986/984), `media`/`render` groups, data + media dirs. Run first, as root. |
+| `bootstrap.sh` | Create Jellyfin user/group (986/984), `media`/`render` groups, data + media dirs, and free port 53 for Blocky. Run first, as root. |
 | `filesystems.md` | Disk layout (`/media` xfs) and the `/media/nfs` + `/media/alldebrid` mounts. |
 | `systemd/rclone-alldebrid-mount.service` | systemd unit that FUSE-mounts AllDebrid into `/media/alldebrid`. Secret-free. |
 | `rclone/` | Reference template + setup instructions for the rclone AllDebrid remote (credentials live off-repo). |
@@ -33,3 +33,7 @@ Reference system at time of capture: **Fedora Linux 41 (Server Edition)**.
 - **Media groups**: `media` (1002) owns the libraries; both `kiran` and
   `jellyfin` are members, so the container can read `/media/*`.
 - **rclone**: the AllDebrid credentials are NOT in this repo — see `rclone/`.
+- **Port 53**: `bootstrap.sh` disables `systemd-resolved`'s stub listener so
+  the Blocky container can bind it. If your router or LAN clients are
+  configured to use this host for DNS, Blocky must be up for name resolution
+  to work network-wide.

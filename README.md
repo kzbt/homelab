@@ -5,12 +5,13 @@ bare-metal rebuild. Reference system: **Fedora Linux 41 (Server Edition)**.
 
 ## What runs
 
-Two Docker containers (plain Docker Compose — no Kubernetes):
+Three Docker containers (plain Docker Compose — no Kubernetes):
 
 | App | Stack | Purpose |
 |---|---|---|
 | [Jellyfin](apps/jellyfin/) | `apps/jellyfin/docker-compose.yml` | Media server (host networking, Intel iGPU transcoding) |
 | [Stremio](apps/stremio/) | `apps/stremio/docker-compose.yml` | `stremio-server` headless backend for Stremio clients |
+| [Blocky](apps/blocky/) | `apps/blocky/docker-compose.yml` | DNS-level ad-blocker + resolver for the LAN (binds port 53) |
 
 ## Layout
 
@@ -19,6 +20,7 @@ docker-compose.yml  # root stack — includes both apps below; `docker compose u
 apps/        # docker-compose stacks (the source of truth for the live containers)
   jellyfin/
   stremio/
+  blocky/
 host/        # host-OS prerequisites: users/groups, disks, mounts, systemd
   bootstrap.sh
   filesystems.md
@@ -41,19 +43,19 @@ Full detail in `deploy/`. In short:
 
 ```bash
 # 1. host
-sudo host/bootstrap.sh                       # users, groups, dirs
+sudo host/bootstrap.sh                       # users, groups, dirs, frees port 53
 #    + restore /etc/jellyfin, /var/lib/jellyfin from backup
 #    + set up rclone (host/rclone/README.md) + enable the mount unit
 
-# 2. apps (root compose file includes both apps/ stacks)
+# 2. apps (root compose file includes all apps/ stacks)
 docker compose up -d
 ```
 
-Both containers (`jellyfin`, `stremio_server`) run under the single `homelab`
-Compose project defined by the root `docker-compose.yml`. Each app's own
-`apps/*/docker-compose.yml` can still be run standalone with `-f` if needed,
-but it will end up under a differently-named project — prefer the root file
-for day-to-day use.
+All three containers (`jellyfin`, `stremio_server`, `blocky`) run under the
+single `homelab` Compose project defined by the root `docker-compose.yml`.
+Each app's own `apps/*/docker-compose.yml` can still be run standalone with
+`-f` if needed, but it will end up under a differently-named project — prefer
+the root file for day-to-day use.
 
 ## Notes
 
@@ -62,3 +64,5 @@ for day-to-day use.
   reproduces the running container exactly. See each app's README.
 - The `archive/k0s/` directory contains earlier Kubernetes (k0s) manifests that
   were **stubs and never matched the live Docker setup**. Kept for reference only.
+- Blocky was previously a native systemd service (`/opt/blocky`); it has been
+  fully migrated into `apps/blocky/` and removed from the host.

@@ -45,6 +45,17 @@ install -d -o 986 -g 984 -m 0755 /etc/jellyfin
 # --- Media mountpoints ----------------------------------------------------
 install -d -o "$MEDIA_USER" -g media -m 0775 /media/nfs /media/alldebrid
 
+# --- Free port 53 for Blocky -----------------------------------------------
+# systemd-resolved's stub listener binds 53 by default, which conflicts with
+# the Blocky container. Disable it (resolution still works via the dynamic
+# /run/systemd/resolve/resolv.conf symlink, unaffected by this setting).
+mkdir -p /etc/systemd/resolved.conf.d
+cat > /etc/systemd/resolved.conf.d/no-stub-listener.conf <<'EOF'
+[Resolve]
+DNSStubListener=no
+EOF
+systemctl reload-or-restart systemd-resolved
+
 echo
 echo "Bootstrap complete."
 echo "Next steps:"

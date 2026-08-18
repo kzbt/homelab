@@ -1,0 +1,15 @@
+services:
+  blocky:
+    image: spx01/blocky:v0.25
+    container_name: blocky
+    restart: unless-stopped
+    # Blocky runs as an unprivileged user (uid 100) inside the image, so
+    # binding to port 53 needs this capability explicitly.
+    cap_add:
+      - NET_BIND_SERVICE
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "4000:4000/tcp"   # Prometheus metrics (/metrics)
+    volumes:
+      - ./config.yaml:/app/config.yml:ro
