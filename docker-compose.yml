@@ -5,3 +5,4 @@ include:
   - apps/stremio/docker-compose.yml
   - apps/blocky/docker-compose.yml
   - apps/monitoring/docker-compose.yml
+  - apps/proxy/docker-compose.yml

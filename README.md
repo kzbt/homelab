@@ -5,7 +5,7 @@ bare-metal rebuild. Reference system: **Fedora Linux 41 (Server Edition)**.
 
 ## What runs
 
-Six Docker containers (plain Docker Compose — no Kubernetes):
+Seven Docker containers (plain Docker Compose — no Kubernetes):
 
 | App | Stack | Purpose |
 |---|---|---|
@@ -13,6 +13,10 @@ Six Docker containers (plain Docker Compose — no Kubernetes):
 | [Stremio](apps/stremio/) | `apps/stremio/docker-compose.yml` | `stremio-server` headless backend for Stremio clients |
 | [Blocky](apps/blocky/) | `apps/blocky/docker-compose.yml` | DNS-level ad-blocker + resolver for the LAN (binds port 53) |
 | [Monitoring](apps/monitoring/) | `apps/monitoring/docker-compose.yml` | Prometheus + Grafana + node-exporter — host metrics and Blocky metrics, dashboards pre-provisioned |
+| [Proxy](apps/proxy/) | `apps/proxy/docker-compose.yml` | Caddy reverse proxy — HTTPS on plain `.lan` hostnames, no ports |
+
+Reachable at: `https://jellyfin.lan`, `https://stremio.lan`,
+`https://grafana.lan`, `https://prometheus.lan` (see [Proxy](apps/proxy/)).
 
 ## Layout
 
@@ -23,6 +27,7 @@ apps/        # docker-compose stacks (the source of truth for the live container
   stremio/
   blocky/
   monitoring/
+  proxy/
 host/        # host-OS prerequisites: users/groups, disks, mounts, systemd
   bootstrap.sh
   filesystems.md
@@ -54,7 +59,8 @@ docker compose up -d
 ```
 
 All containers (`jellyfin`, `stremio_server`, `blocky`, `prometheus`,
-`grafana`, `node-exporter`) run under the single `homelab` Compose project defined by the root `docker-compose.yml`.
+`grafana`, `node-exporter`, `caddy`) run under the single `homelab` Compose
+project defined by the root `docker-compose.yml`.
 Each app's own `apps/*/docker-compose.yml` can still be run standalone with
 `-f` if needed, but it will end up under a differently-named project — prefer
 the root file for day-to-day use.

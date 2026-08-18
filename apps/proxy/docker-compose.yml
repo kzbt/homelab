@@ -1,0 +1,21 @@
+services:
+  caddy:
+    image: caddy:2.11.4-alpine
+    container_name: caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    # `default` reaches blocky/grafana/prometheus (same project default
+    # network); `homelab` (defined in apps/stremio) reaches stremio_server.
+    networks:
+      - default
+      - homelab
+
+volumes:
+  caddy-data:
+  caddy-config:

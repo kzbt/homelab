@@ -1,0 +1,22 @@
+jellyfin.lan {
+	tls internal
+	# Jellyfin (network_mode: host) only binds 127.0.0.1 and 192.168.0.100
+	# specifically, not 0.0.0.0 - so the bridge gateway IP (host.docker.internal)
+	# gets connection refused. Its LAN IP is reachable directly instead.
+	reverse_proxy 192.168.0.100:8096
+}
+
+stremio.lan {
+	tls internal
+	reverse_proxy stremio_server:11470
+}
+
+grafana.lan {
+	tls internal
+	reverse_proxy grafana:3000
+}
+
+prometheus.lan {
+	tls internal
+	reverse_proxy prometheus:9090
+}

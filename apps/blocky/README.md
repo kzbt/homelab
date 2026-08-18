@@ -27,10 +27,11 @@ hostname mappings).
 
 - Ad/tracker blocking via the StevenBlack hosts list, refreshed every 24h.
 - Upstream resolution via Quad9 and Cloudflare DoH.
-- Custom local records (`customDNS.mapping` in `config.yaml`):
-  `jellyfin.lan`, `transmission.lan`, `prometheus.lan` → `192.168.0.100`.
-  (`transmission` and `prometheus` aren't containerized in this repo yet —
-  the DNS records predate it.)
+- Custom local records (`customDNS.mapping` in `config.yaml`): `jellyfin.lan`,
+  `stremio.lan`, `grafana.lan`, `prometheus.lan`, `transmission.lan` →
+  `192.168.0.100`. All resolve to this host; `apps/proxy` (Caddy) is what
+  routes each hostname to its actual backend over HTTPS with no port number.
+  (`transmission` isn't containerized in this repo — the record predates it.)
 
 ## Host prerequisites
 
