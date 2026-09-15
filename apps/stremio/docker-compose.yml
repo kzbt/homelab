@@ -1,12 +1,5 @@
 services:
   stremio_server:
-    # Reconstructed from `docker inspect` of the live container — the original
-    # compose file (~/.source/homelab/docker-compose.yaml) was deleted, so this
-    # reproduces the running container exactly.
-    #
-    # Image tag matches the live container. Server reports version 4.20.14
-    # (image built 2025-11-25). For strict reproducibility, pin by digest:
-    #   image: stremio/server@sha256:31f37d46193f05e8cadbf1899ea49c453ec8ef2a3882ff90096509e1f6b596f7
     image: stremio/server:latest
     container_name: stremio_server
     restart: unless-stopped

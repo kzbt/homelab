@@ -1,0 +1,44 @@
+services:
+  remux:
+    image: ghcr.io/lostb1t/remux:0.26.0
+    container_name: remux
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+    volumes:
+      # Server data (sqlite db, logs, torrent cache). Container runs as root,
+      # like upstream's image expects.
+      - /home/kiran/remux:/data
+
+      # Media libraries — same slave-propagation binds as the jellyfin stack so
+      # NFS/FUSE mounts made on the host after container start stay visible.
+      - type: bind
+        source: /media/nfs
+        target: /media/nfs
+        bind:
+          propagation: slave
+      - type: bind
+        source: /media/alldebrid
+        target: /media/alldebrid
+        bind:
+          propagation: slave
+
+    # Intel iGPU (VA-API) transcoding. The image ships jellyfin-ffmpeg7,
+    # mesa-va-drivers and the Intel compute runtime for tone mapping.
+    devices:
+      - /dev/dri:/dev/dri
+
+    # No published host port: host 3000 is grafana's. Reached via
+    # https://remux.lan (Caddy) like the other web apps.
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    # Same named network as apps/stremio — keeps it stable regardless of the
+    # compose project name, and lets caddy reach the container by name.
+    name: homelab
