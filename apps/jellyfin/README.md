@@ -8,7 +8,9 @@ This `docker-compose.yml` is the verbatim source of truth for the live
 
 ## Key choices
 
-- **Image**: `jellyfin/jellyfin:10.11.1` (pinned to a specific release).
+- **Image**: `jellyfin/jellyfin:12.1` (minor tag — pulls 12.1.x point
+  releases on `docker compose pull`; DB backup before upgrades:
+  `cp -a /var/lib/jellyfin/data/jellyfin.db{,.pre-12.1.bak}`).
 - **Networking**: `network_mode: host` — Jellyfin discovers clients and handles
   multicast (e.g. DLNA/SSDP) more reliably on host networking. No ports are
   published explicitly because of this.
