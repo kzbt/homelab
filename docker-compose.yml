@@ -2,7 +2,9 @@ name: homelab
 
 include:
   - apps/jellyfin/docker-compose.yml
+  - apps/remux/docker-compose.yml
   - apps/stremio/docker-compose.yml
   - apps/blocky/docker-compose.yml
+  - apps/calibre-web-automated/docker-compose.yml
   - apps/monitoring/docker-compose.yml
   - apps/proxy/docker-compose.yml

@@ -52,8 +52,10 @@ sudo mount -t nfs <server>:/export/media /media/nfs
 Clone this repo to e.g. `~/homelab`, then:
 
 ```bash
-docker compose -f apps/stremio/docker-compose.yml  up -d   # http://<host>:11470
-docker compose -f apps/jellyfin/docker-compose.yml up -d   # http://<host>:8096
+docker compose up -d                                          # root file: all apps
+docker compose -f apps/stremio/docker-compose.yml  up -d      # (alternatives:
+docker compose -f apps/jellyfin/docker-compose.yml up -d      #  single stacks)
+docker compose -f apps/calibre-web-automated/docker-compose.yml up -d
 ```
 
 > The live containers were launched from different paths
@@ -65,8 +67,9 @@ docker compose -f apps/jellyfin/docker-compose.yml up -d   # http://<host>:8096
 ## 5. Verify
 
 ```bash
-docker ps                                  # jellyfin + stremio_server up
+docker ps                                  # jellyfin + stremio_server + calibre-web-automated up
 curl -sI http://localhost:8096  | head -1  # Jellyfin web
 curl -sI http://localhost:11470 | head -1  # Stremio server
+curl -skI --resolve books.lan:443:127.0.0.1 https://books.lan | head -1  # CWA via caddy
 mount | grep -E 'alldebrid|nfs'            # media mounts present
 ```

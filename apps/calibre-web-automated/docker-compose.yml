@@ -1,0 +1,27 @@
+services:
+  calibre-web-automated:
+    # Pinned to the latest upstream release (2026-02) — bump deliberately.
+    image: crocodilestick/calibre-web-automated:v4.0.6
+    container_name: calibre-web-automated
+    restart: unless-stopped
+    environment:
+      # kiran (uid 1000) owns the /media/books dirs and the config dir below.
+      - PUID=1000
+      - PGID=1000
+      - TZ=Asia/Singapore
+      # Optional: Hardcover metadata provider API key
+      # https://docs.hardcover.app/api/getting-started/
+      # - HARDCOVER_TOKEN=
+    volumes:
+      # App state: app.db (users/settings), processed-book backups, logs.
+      - /home/kiran/calibre-web-automated/config:/config
+      # Drop folder — anything placed here is auto-ingested (and removed
+      # after processing). NOT part of the library itself.
+      - /media/books/ingest:/cwa-book-ingest
+      # The Calibre library (metadata.db + books). Auto-created on first
+      # start if empty.
+      - /media/books/library:/calibre-library
+      # Optional: bind Calibre plugins for CWA's workflow (WIP upstream)
+      # - /home/kiran/calibre-web-automated/plugins:/config/.config/calibre/plugins
+    ports:
+      - "8083:8083"   # direct UI access; LAN access goes through caddy (books.lan)

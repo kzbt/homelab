@@ -52,6 +52,8 @@ customDNS:
     prometheus.lan: 192.168.0.100
     stremio.lan: 192.168.0.100
     grafana.lan: 192.168.0.100
+    remux.lan: 192.168.0.100
+    books.lan: 192.168.0.100
 
 # optional: use allow/denylists to block queries (for example ads, trackers, adult pages etc.)
 blocking:

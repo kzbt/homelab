@@ -5,18 +5,20 @@ bare-metal rebuild. Reference system: **Fedora Linux 41 (Server Edition)**.
 
 ## What runs
 
-Seven Docker containers (plain Docker Compose — no Kubernetes):
+Nine Docker containers (plain Docker Compose — no Kubernetes):
 
 | App | Stack | Purpose |
 |---|---|---|
 | [Jellyfin](apps/jellyfin/) | `apps/jellyfin/docker-compose.yml` | Media server (host networking, Intel iGPU transcoding) |
+| [Remux](apps/remux/) | `apps/remux/docker-compose.yml` | **TRIAL** Jellyfin-compatible media server w/ built-in Stremio add-on support — candidate jellyfin+stremio replacement, runs alongside jellyfin during evaluation |
 | [Stremio](apps/stremio/) | `apps/stremio/docker-compose.yml` | `stremio-server` headless backend for Stremio clients |
 | [Blocky](apps/blocky/) | `apps/blocky/docker-compose.yml` | DNS-level ad-blocker + resolver for the LAN (binds port 53) |
 | [Monitoring](apps/monitoring/) | `apps/monitoring/docker-compose.yml` | Prometheus + Grafana + node-exporter — host metrics and Blocky metrics, dashboards pre-provisioned |
-| [Proxy](apps/proxy/) | `apps/proxy/docker-compose.yml` | Caddy reverse proxy — HTTPS on plain `.lan` hostnames, no ports |
+| [Calibre-Web-Automated](apps/calibre-web-automated/) | `apps/calibre-web-automated/docker-compose.yml` | eBook library server — auto-ingest + conversion, OPDS, e-reader sync |
 
-Reachable at: `https://jellyfin.lan`, `https://stremio.lan`,
-`https://grafana.lan`, `https://prometheus.lan` (see [Proxy](apps/proxy/)).
+Reachable at: `https://jellyfin.lan`, `https://remux.lan`, `https://stremio.lan`,
+`https://books.lan`, `https://grafana.lan`, `https://prometheus.lan` (see [Proxy](apps/proxy/)).
+
 
 ## Layout
 
@@ -24,9 +26,11 @@ Reachable at: `https://jellyfin.lan`, `https://stremio.lan`,
 docker-compose.yml  # root stack — includes both apps below; `docker compose up -d` here runs everything
 apps/        # docker-compose stacks (the source of truth for the live containers)
   jellyfin/
+  remux/
   stremio/
   blocky/
   monitoring/
+  calibre-web-automated/
   proxy/
 host/        # host-OS prerequisites: users/groups, disks, mounts, systemd
   bootstrap.sh
@@ -58,7 +62,7 @@ sudo host/bootstrap.sh                       # users, groups, dirs, frees port 5
 docker compose up -d
 ```
 
-All containers (`jellyfin`, `stremio_server`, `blocky`, `prometheus`,
+All containers (`jellyfin`, `remux`, `stremio_server`, `blocky`, `prometheus`,
 `grafana`, `node-exporter`, `caddy`) run under the single `homelab` Compose
 project defined by the root `docker-compose.yml`.
 Each app's own `apps/*/docker-compose.yml` can still be run standalone with

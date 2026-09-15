@@ -4,15 +4,30 @@ Caddy reverse proxy, giving every app a plain hostname over HTTPS with no
 port number — `https://jellyfin.lan` instead of `http://jellyfin.lan:8096`.
 
 ## Routes
-
 | Hostname | Backend |
 |---|---|
 | `jellyfin.lan` | `192.168.0.100:8096` (Jellyfin, host networking) |
+| `remux.lan` | `remux:3000` |
 | `stremio.lan` | `stremio_server:11470` |
+| `books.lan` | `calibre-web-automated:8083` |
 | `grafana.lan` | `grafana:3000` |
 | `prometheus.lan` | `prometheus:9090` |
 
-DNS for all four `.lan` names is provided by Blocky (`apps/blocky/config.yaml`
+`books.lan` is also reachable over **plain HTTP on `/kobo/*` only** — stock
+Kobo firmware validates TLS strictly and cannot trust Caddy's internal CA, so
+the Calibre-Web-Automated Kobo sync API is proxied without TLS
+(`http://books.lan/kobo/...`). Any other `http://books.lan` path redirects to
+HTTPS.
+
+The `http://books.lan` block also serves a small **OIDC shim** (discovery doc,
+`/oauth/authorize` redirect, long-expiry `/oauth/token`): Kobo firmware 4.45+
+requires a working OIDC handshake before it will sync, and CWA v4.0.6's
+`/oauth/<path>` catch-all answers the discovery request with a token blob
+instead (upstream issue
+[crocodilestick/Calibre-Web-Automated#1418](https://github.com/crocodilestick/Calibre-Web-Automated/issues/1418) —
+open as of 2026-09). **Remove the shim when upstream ships the fix.**
+
+DNS for all `.lan` names is provided by Blocky (`apps/blocky/config.yaml`
 `customDNS.mapping`) — Caddy only handles the HTTP(S) routing once a request
 already lands on this host.
 

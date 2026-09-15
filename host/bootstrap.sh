@@ -45,6 +45,11 @@ install -d -o 986 -g 984 -m 0755 /etc/jellyfin
 # --- Media mountpoints ----------------------------------------------------
 install -d -o "$MEDIA_USER" -g media -m 0775 /media/nfs /media/alldebrid
 
+# --- Book library dirs (Calibre-Web-Automated) ----------------------------
+# Library + ingest live on the /media disk; app state lives in the user's
+# home dir (~/calibre-web-automated/config, like stremio's ~/stremio).
+install -d -o "$MEDIA_USER" -g media -m 0775 /media/books /media/books/library /media/books/ingest
+
 # --- Free port 53 for Blocky -----------------------------------------------
 # systemd-resolved's stub listener binds 53 by default, which conflicts with
 # the Blocky container. Disable it (resolution still works via the dynamic

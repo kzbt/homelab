@@ -6,6 +6,50 @@ jellyfin.lan {
 	reverse_proxy 192.168.0.100:8096
 }
 
+books.lan {
+	tls internal
+	reverse_proxy calibre-web-automated:8083
+}
+
+# Plain-HTTP entry for Kobo e-readers: stock Kobo firmware validates TLS
+# strictly and cannot trust Caddy's internal CA, so the Kobo sync API must be
+# reachable over http. Only /kobo/* is served plain; anything else hitting
+# http://books.lan is redirected to https.
+http://books.lan {
+	log
+	# --- Kobo firmware 4.45+ OIDC shim (upstream CWA issue #1418) ----------
+	# Firmware 4.45+ performs proper OIDC discovery before syncing; CWA
+	# v4.0.6's /oauth/<path> catch-all answers the discovery request with a
+	# token blob, so the device retries ~7x and aborts before /v1/library/sync.
+	# The three handlers below implement discovery/authorize/token at the
+	# proxy (long token expiry: short-lived dummy tokens break after 1h).
+	# Only safe with kobo store proxying disabled in CWA (config_kobo_proxy=0,
+	# our default). REMOVE when upstream ships a fixed release.
+	@kobo_discovery path_regexp kdiscovery ^/kobo/([a-f0-9]+)/oauth/\.well-known/openid-configuration$
+	handle @kobo_discovery {
+		header Content-Type "application/json"
+		respond `{"issuer":"http://books.lan/kobo/{re.kdiscovery.1}/oauth","authorization_endpoint":"http://books.lan/kobo/{re.kdiscovery.1}/oauth/authorize","token_endpoint":"http://books.lan/kobo/{re.kdiscovery.1}/oauth/token","response_types_supported":["code"],"grant_types_supported":["authorization_code","refresh_token"],"code_challenge_methods_supported":["S256","plain"],"subject_types_supported":["public"],"scopes_supported":["openid","profile","email","offline_access"]}`
+	}
+	@kobo_authorize path_regexp kauthorize ^/kobo/([a-f0-9]+)/oauth/authorize$
+	handle @kobo_authorize {
+		header Location "kobo://UserAuthenticated?code=cwa-{re.kauthorize.1}&state={http.request.uri.query.state}"
+		respond 302
+	}
+	@kobo_token path_regexp ktoken ^/kobo/([a-f0-9]+)/oauth/(token|refresh)$
+	handle @kobo_token {
+		header Content-Type "application/json"
+		respond `{"access_token":"cwa-{re.ktoken.1}","refresh_token":"cwa-refresh-{re.ktoken.1}","token_type":"Bearer","expires_in":315360000,"scope":"openid profile email offline_access","user_id":"cwa-user","AccessToken":"cwa-{re.ktoken.1}","RefreshToken":"cwa-refresh-{re.ktoken.1}","TokenType":"Bearer","TrackingId":"00000000-0000-4000-8000-000000000001","UserKey":"cwa-user"}`
+	}
+	@notkobo not path /kobo/*
+	redir @notkobo https://books.lan{uri}
+	reverse_proxy /kobo/* calibre-web-automated:8083
+}
+
+remux.lan {
+	tls internal
+	reverse_proxy remux:3000
+}
+
 stremio.lan {
 	tls internal
 	reverse_proxy stremio_server:11470
