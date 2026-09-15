@@ -129,15 +129,56 @@ docker compose restart calibre-web-automated
 
 Verify with the toolbox: `sync | jq length` should list the library.
 If the device still ignores the re-offers (nickel can keep local tombstones),
-the fallback is a device factory reset — try the sync first.
+see Problem 5.
+
+## Problem 5: deleted books never come back, even after the Problem 4 cleanup
+
+**Symptom**: markers cleared, sync shows `NewEntitlements` for them, but the
+device never downloads them (no `download/...` requests in the caddy trace)
+and CWA re-marks them synced.
+
+**Cause**: nickel keeps a hidden tombstone for every book deleted on the
+device. CWA sets `RevisionId`/`CrossRevisionId` = `books.uuid` (immutable), so
+every re-offer matches the tombstone and is silently skipped. There is no
+device-side UI to purge tombstones.
+
+**Fix**: give the books new identities — regenerate `books.uuid` in
+`metadata.db`, clear their `kobo_synced_books` rows, restart. Nickel sees
+brand-new books and downloads them:
+
+```bash
+docker exec calibre-web-automated python3 -c "
+import sqlite3, uuid
+m = sqlite3.connect('/calibre-library/metadata.db')
+def title_sort(t):
+    return t or ''
+m.create_function('title_sort', 1, title_sort)   # schema triggers need it
+for bid in (2, 3, 4, 6):                          # stuck book ids
+    m.execute('UPDATE books SET uuid=? WHERE id=?', (str(uuid.uuid4()), bid))
+m.commit()
+c = sqlite3.connect('/config/app.db')
+c.execute('DELETE FROM kobo_synced_books WHERE user_id=1 AND book_id IN (2,3,4,6)')
+c.commit()"
+docker compose restart calibre-web-automated
+```
+
+Note: `metadata.db` triggers call Calibre's custom `title_sort()` SQL
+function — register it on plain connections or every UPDATE fails with
+`no such function: title_sort`.
+
+Nuclear alternative: factory-reset the Kobo (wipes tombstones and everything
+else). Prefer the uuid route.
 
 ## Mental model
 
 - **Add books** → drop files into `/media/books/ingest` → CWA ingests +
   converts → **next device sync picks them up automatically**. That is the
   whole workflow; nothing else to trigger.
-- **Delete on device** = archive server-side; the book never comes back
-  until the Problem 4 cleanup.
+- **Delete on device** = tombstone locally + archive server-side; the book
+  never comes back until the Problem 4 + Problem 5 cleanup.
+- **Offered ≠ delivered**: CWA marks a book synced when it appears in a sync
+  response, whether or not the device actually downloaded it. Check the caddy
+  trace for `download/...` requests to tell the two apart.
 - The device polls periodically on its own (init/analytics/deals hits in the
   log are normal noise; `3B` responses are CWA's empty store responses).
 
