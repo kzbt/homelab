@@ -134,9 +134,18 @@ remain (e.g. only the stuck books), CWA honors the device's sync token
 ("I have everything up to T") and the delta still excludes older books —
 the fix looks applied but nothing is offered. With zero rows, CWA ignores
 the token and re-offers the whole library; already-present books are
-silently deduped by the device. Verify with a token-bearing request, not a
-bare curl — a tokenless request skips the delta logic and always shows
-everything:
+silently deduped by the device.
+
+**Don't verify by replaying `/v1/library/sync` yourself** — any sync response
+marks the offered books as delivered, burning the fix; the device then gets
+an empty delta. (This bit us twice.) Instead: check `kobo_synced_books` is
+empty, then let the device sync and watch the caddy trace for
+`download/...` requests. If you did replay it, re-run the DELETE above and
+leave sync alone.
+
+The delta only exists because of the device's sync token — `x-kobo-synctoken`
+is base64 JSON of this shape (a bare curl without the header skips delta
+logic and always shows everything — misleading when verifying):
 
 ```python
 # x-kobo-synctoken header: base64 of {"version": "1-1-0", "data": {...}}
