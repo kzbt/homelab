@@ -97,8 +97,6 @@ with **10-year expiry** (short-lived dummy tokens re-break after 1h — that
 gap cost the issue thread a week of confusion). Only safe with kobo store
 proxying off (`config_kobo_proxy=0`, our default).
 
-**Remove the shim when upstream ships a fix.**
-
 Gotcha from the same issue: if books arrive but the banner still says "sync
 failed", it's the device's **notebook** sync — disable Settings → Accounts →
 Synchronize Notebooks on the Kobo.
@@ -130,6 +128,25 @@ docker compose restart calibre-web-automated
 Verify with the toolbox: `sync | jq length` should list the library.
 If the device still ignores the re-offers (nickel can keep local tombstones),
 see Problem 5.
+
+**Gotcha**: always clear **all** the user's `kobo_synced_books` rows. If any
+remain (e.g. only the stuck books), CWA honors the device's sync token
+("I have everything up to T") and the delta still excludes older books —
+the fix looks applied but nothing is offered. With zero rows, CWA ignores
+the token and re-offers the whole library; already-present books are
+silently deduped by the device. Verify with a token-bearing request, not a
+bare curl — a tokenless request skips the delta logic and always shows
+everything:
+
+```python
+# x-kobo-synctoken header: base64 of {"version": "1-1-0", "data": {...}}
+tok = {"version": "1-1-0", "data": {"raw_kobo_store_token": "",
+    "books_last_modified": "2026-09-15T08:30:00+00:00",
+    "books_last_created": "2026-09-15T08:30:00+00:00",
+    "archive_last_modified": "2026-09-15T08:30:00+00:00",
+    "reading_state_last_modified": "2026-09-15T08:30:00+00:00",
+    "tags_last_modified": "2026-09-15T08:30:00+00:00"}}  # all keys required
+```
 
 ## Problem 5: deleted books never come back, even after the Problem 4 cleanup
 
